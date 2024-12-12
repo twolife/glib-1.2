@@ -5,10 +5,9 @@ info_TEXINFOS = glib.texi
 man_MANS = glib-config.1
 
 EXTRA_DIST = glib-config.1.in	\
-	     glib.html 		\
-	     glib_toc.html
+	     glib.html
 
-glib.html glib_toc.html:
+glib.html:
 	(cd $(srcdir); texi2html glib.texi)
 
 files:
