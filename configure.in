@@ -372,7 +372,10 @@ AC_CHECK_FUNC(iswalnum,,[AC_CHECK_LIB(w,iswalnum)])
 
 # The following is necessary for Linux libc-5.4.38
 AC_MSG_CHECKING(if iswalnum() and friends are properly defined)
-AC_TRY_LINK([#include <stdlib.h>],[
+AC_TRY_LINK([
+#include <stdlib.h>
+#include <ctype.h>
+],[
 #if (defined(HAVE_WCTYPE_H) || defined(HAVE_WCHAR_H))
 #  ifdef HAVE_WCTYPE_H
 #    include <wctype.h>
@@ -417,6 +420,7 @@ AC_MSG_CHECKING(for an implementation of va_copy())
 AC_CACHE_VAL(glib_cv_va_copy,[
 	AC_TRY_RUN([
 	#include <stdarg.h>
+	#include <stdlib.h>
 	void f (int i, ...) {
 	va_list args1, args2;
 	va_start (args1, i);
@@ -439,6 +443,7 @@ AC_MSG_CHECKING(for an implementation of __va_copy())
 AC_CACHE_VAL(glib_cv___va_copy,[
 	AC_TRY_RUN([
 	#include <stdarg.h>
+	#include <stdlib.h>
 	void f (int i, ...) {
 	va_list args1, args2;
 	va_start (args1, i);
@@ -461,6 +466,7 @@ AC_MSG_CHECKING(whether va_lists can be copied by value)
 AC_CACHE_VAL(glib_cv_va_val_copy,[
 	AC_TRY_RUN([
 	#include <stdarg.h>
+	#include <stdlib.h>
 	void f (int i, ...) {
 	va_list args1, args2;
 	va_start (args1, i);

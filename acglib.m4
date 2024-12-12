@@ -47,8 +47,9 @@ changequote([, ])dnl
 AC_MSG_CHECKING(size of $2)
 AC_CACHE_VAL(AC_CV_NAME,
 [AC_TRY_RUN([#include <stdio.h>
+#include <stdlib.h>
 $1
-main()
+int main()
 {
   FILE *f=fopen("conftestval", "w");
   if (!f) exit(1);
@@ -72,8 +73,9 @@ changequote([, ])dnl
 AC_MSG_CHECKING(byte contents of $2)
 AC_CACHE_VAL(AC_CV_NAME,
 [AC_TRY_RUN([#include <stdio.h>
+#include <stdlib.h>
 $1
-main()
+int main()
 {
   static $2 tv = $5;
   char *p = (char*) &tv;
