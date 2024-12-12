@@ -413,7 +413,7 @@ g_relation_print_one (gpointer tuple_key,
     }
   
   g_string_append (gstring, "]");
-  g_log (g_log_domain_glib, G_LOG_LEVEL_INFO, gstring->str);
+  g_log (g_log_domain_glib, G_LOG_LEVEL_INFO, "%s", gstring->str);
   g_string_free (gstring, TRUE);
 }
 

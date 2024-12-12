@@ -277,6 +277,9 @@ my_traverse (gpointer key,
   return FALSE;
 }
 
+/* This program explicitly tests for a NULL format string */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wformat-security"
 int
 main (int   argc,
       char *argv[])
@@ -918,4 +921,5 @@ main (int   argc,
 
   return 0;
 }
+#pragma GCC diagnostic pop
 
