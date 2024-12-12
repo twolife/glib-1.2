@@ -7,7 +7,9 @@ builtin(include, acglib.m4)dnl
 AC_PREREQ(2.13)
 
 # init autoconf (and check for presence of glist.c)
-AC_INIT(glist.c)
+AC_INIT([glib], [1.2.10])
+AC_CONFIG_SRCDIR([glist.c])
+AM_INIT_AUTOMAKE
 
 # Save this value here, since automake will set cflags later
 cflags_set=${CFLAGS+set}
@@ -54,13 +56,8 @@ AC_SUBST(LT_CURRENT)
 AC_SUBST(LT_REVISION)
 AC_SUBST(LT_AGE)
 
-VERSION=$GLIB_VERSION
-PACKAGE=glib
-
-AM_INIT_AUTOMAKE($PACKAGE, $VERSION, no-define)
-
 # Specify a configuration file
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
 AC_DEFINE_UNQUOTED(GLIB_MAJOR_VERSION, $GLIB_MAJOR_VERSION)
 AC_DEFINE_UNQUOTED(GLIB_MINOR_VERSION, $GLIB_MINOR_VERSION)
@@ -69,7 +66,7 @@ AC_DEFINE_UNQUOTED(GLIB_INTERFACE_AGE, $GLIB_INTERFACE_AGE)
 AC_DEFINE_UNQUOTED(GLIB_BINARY_AGE, $GLIB_BINARY_AGE)
 
 dnl Initialize libtool
-AM_PROG_LIBTOOL
+LT_INIT
 
 dnl Initialize maintainer mode
 AM_MAINTAINER_MODE
@@ -151,7 +148,7 @@ AC_DEFINE_UNQUOTED(G_COMPILED_WITH_DEBUGGING, "${enable_debug}")
 
 # Checks for programs.
 AC_PROG_CC
-AM_PROG_CC_STDC
+AC_PROG_CPP
 AC_PROG_INSTALL
 
 changequote(,)dnl
@@ -181,17 +178,18 @@ glib_save_LIBS=$LIBS
 LIBS="$LIBS -lm"
 AC_TRY_RUN([#include <math.h>
              int main (void) { return (log(1) != log(1.)); }],
-     AC_MSG_RESULT(none needed),
-     glib_save_CFLAGS=$CFLAGS
+     [AC_MSG_RESULT(none needed)],
+     [glib_save_CFLAGS=$CFLAGS
      CFLAGS="$CFLAGS -std1"
      AC_TRY_RUN([#include <math.h>
                  int main (void) { return (log(1) != log(1.)); }],
-         AC_MSG_RESULT(-std1),
-         AC_MSG_RESULT()
+         [AC_MSG_RESULT(-std1)],
+         [AC_MSG_RESULT()
          CFLAGS=$glib_save_CFLAGS
          AC_MSG_WARN(
-                [No ANSI prototypes found in library. (-std1 didn't work.)])
-     )
+                [No ANSI prototypes found in library. (-std1 didn't work.)]
+         )]
+     )]
 )
 LIBS=$glib_save_LIBS
 
@@ -206,9 +204,6 @@ AC_TRY_COMPILE([#include <dirent.h>], [DIR *dir;],
     AC_MSG_RESULT()
     CFLAGS=$glib_save_CFLAGS
     AC_MSG_WARN([Could not determine POSIX flag. (-posix didn't work.)])))
-
-# Checks for header files.
-AC_HEADER_STDC
 
 # Checks for library functions.
 AC_FUNC_VPRINTF
@@ -372,10 +367,10 @@ AC_CHECK_FUNC(iswalnum,,[AC_CHECK_LIB(w,iswalnum)])
 
 # The following is necessary for Linux libc-5.4.38
 AC_MSG_CHECKING(if iswalnum() and friends are properly defined)
-AC_TRY_LINK([
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
 #include <ctype.h>
-],[
+]],[[
 #if (defined(HAVE_WCTYPE_H) || defined(HAVE_WCHAR_H))
 #  ifdef HAVE_WCTYPE_H
 #    include <wctype.h>
@@ -388,7 +383,7 @@ AC_TRY_LINK([
 #  define iswalnum(c) ((wchar_t)(c) <= 0xFF && isalnum(c))
 #endif
 iswalnum((wchar_t) 0);
-], glib_working_wctype=yes, glib_working_wctype=no)
+]])], [glib_working_wctype=yes], [glib_working_wctype=no])
 LIBS="$oLIBS"
 
 if test $glib_working_wctype = no; then

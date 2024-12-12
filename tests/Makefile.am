@@ -1,9 +1,11 @@
 
-INCLUDES = -I$(top_srcdir)
+AM_CPPFLAGS = -I$(top_srcdir)
 
 EXTRA_DIST = \
 	makefile.msc \
 	makefile.msc.in
+
+DISTCLEANFILES = makefile.msc
 
 TESTS = \
 	array-test	\

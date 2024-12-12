@@ -11,7 +11,7 @@ bin_SCRIPTS=glib-config
 BUILT_SOURCES=glib-config
 glib-config: glib-config.in
 
-INCLUDES = -DG_LOG_DOMAIN=g_log_domain_glib @GLIB_DEBUG_FLAGS@
+AM_CPPFLAGS = -DG_LOG_DOMAIN=g_log_domain_glib @GLIB_DEBUG_FLAGS@
 
 EXTRA_DIST = \
 	glib.m4			\
@@ -69,6 +69,8 @@ configinclude_DATA = \
 	glibconfig.h
 
 CONFIGURE_DEPENDENCIES = acglib.m4		
+
+DISTCLEANFILES= config.h.win32 glibconfig.h glibconfig.h.win32 glibconfig-sysdefs.h makefile.msc stamp-gc-h
 
 BUILT_SOURCES = stamp-gc-h #note: not glibconfig.h
 glibconfig.h: stamp-gc-h
