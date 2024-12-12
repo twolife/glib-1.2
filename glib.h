@@ -272,7 +272,7 @@ extern "C" {
 /* Wrap the gcc __PRETTY_FUNCTION__ and __FUNCTION__ variables with
  * macros, so we can refer to them as strings unconditionally.
  */
-#ifdef	__GNUC__
+#if defined (__GNUC__) && (__GNUC__ < 3)
 #define	G_GNUC_FUNCTION		__FUNCTION__
 #define	G_GNUC_PRETTY_FUNCTION	__PRETTY_FUNCTION__
 #else	/* !__GNUC__ */
@@ -1291,6 +1291,13 @@ GLogLevelFlags	g_log_set_always_fatal	(GLogLevelFlags	 fatal_mask);
 #ifndef	G_LOG_DOMAIN
 #define	G_LOG_DOMAIN	((gchar*) 0)
 #endif	/* G_LOG_DOMAIN */
+
+/* Suppress warnings when GCC is in -pedantic mode and not -std=c99
+ */
+#if (__GNUC__ >= 3 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 96))
+#pragma GCC system_header
+#endif
+
 #if defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define	g_error(...)	g_log (G_LOG_DOMAIN,         \
 			       G_LOG_LEVEL_ERROR,    \
