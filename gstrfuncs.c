@@ -1047,7 +1047,7 @@ g_printf_string_upper_bound (const gchar* format,
                       gint exp = u_double.mpn.biased_exponent;
 
                       exp -= G_IEEE754_DOUBLE_BIAS;
-                      exp = exp * G_LOG_2_BASE_10 + 1;
+                      exp = abs(exp * G_LOG_2_BASE_10) + 1;
                       conv_len += exp;
                     }
                   /* some printf() implementations require extra padding for rounding */
