@@ -92,35 +92,35 @@ AC_ARG_ENABLE(ansi, [  --enable-ansi           turn on strict ansi [default=no]]
 AC_ARG_ENABLE(threads, [  --enable-threads        turn on basic thread support [default=yes]
                           ([=no] will override --with-threads)],,enable_threads=yes)
 
-if test "x$enable_threads" != "xyes"; then
+AS_IF([test "x$enable_threads" != "xyes"], [
   enable_threads=no
-fi
+])
 
 mem_warn=false
 
 AC_MSG_CHECKING(whether to enable memory checking)
-if test "x$enable_mem_check" = "xyes"; then
+AS_IF([test "x$enable_mem_check" = "xyes"], [
   AC_DEFINE(ENABLE_MEM_CHECK, 1)
   AC_SUBST(ENABLE_MEM_CHECK)
   AC_MSG_RESULT(yes)
   mem_warn=true
-else
+], [
   AC_MSG_RESULT(no)
-fi
+])
 
 AC_MSG_CHECKING(whether to enable memory profiling)
-if test "x$enable_mem_profile" = "xyes"; then
+AS_IF([test "x$enable_mem_profile" = "xyes"], [
   AC_DEFINE(ENABLE_MEM_PROFILE, 1)
   AC_SUBST(ENABLE_MEM_PROFILE)
   AC_MSG_RESULT(yes)
   mem_warn=true
-else
+], [
   AC_MSG_RESULT(no)
-fi
+])
 
 
 
-if $mem_warn ; then
+AS_IF([$mem_warn], [
   AC_MSG_WARN([
 **********************************************************************
  You have specified --enable-mem-profile or --enable-mem-check. 
@@ -133,16 +133,16 @@ if $mem_warn ; then
   http://people.redhat.com/otaylor/memprof/memtools.html
 
 **********************************************************************])
-fi
+])
 
-if test "x$enable_debug" = "xyes"; then
+AS_IF([test "x$enable_debug" = "xyes"], [
   test "$cflags_set" = set || CFLAGS="$CFLAGS -g"
   GLIB_DEBUG_FLAGS="-DG_ENABLE_DEBUG"
-else
-  if test "x$enable_debug" = "xno"; then
+], [
+  AS_IF([test "x$enable_debug" = "xno"], [
     GLIB_DEBUG_FLAGS="-DG_DISABLE_ASSERT -DG_DISABLE_CHECKS"
-  fi
-fi
+  ])
+])
 
 AC_DEFINE_UNQUOTED(G_COMPILED_WITH_DEBUGGING, "${enable_debug}")
 
@@ -176,13 +176,13 @@ dnl DU4 native cc currently needs -std1 for ANSI mode (instead of K&R)
 AC_MSG_CHECKING([for extra flags to get ANSI library prototypes])
 glib_save_LIBS=$LIBS
 LIBS="$LIBS -lm"
-AC_TRY_RUN([#include <math.h>
-             int main (void) { return (log(1) != log(1.)); }],
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],[[
+             return (log(1) != log(1.)); ]])],
      [AC_MSG_RESULT(none needed)],
      [glib_save_CFLAGS=$CFLAGS
      CFLAGS="$CFLAGS -std1"
-     AC_TRY_RUN([#include <math.h>
-                 int main (void) { return (log(1) != log(1.)); }],
+     AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <math.h>]],[[
+                 return (log(1) != log(1.));]])],
          [AC_MSG_RESULT(-std1)],
          [AC_MSG_RESULT()
          CFLAGS=$glib_save_CFLAGS
@@ -195,15 +195,21 @@ LIBS=$glib_save_LIBS
 
 dnl NeXTStep cc seems to need this
 AC_MSG_CHECKING([for extra flags for POSIX compliance])
-AC_TRY_COMPILE([#include <dirent.h>], [DIR *dir;],
-  AC_MSG_RESULT(none needed),
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <dirent.h>]], [[DIR *dir;]])],
+  [AC_MSG_RESULT(none needed)],
+  [
   glib_save_CFLAGS=$CFLAGS
   CFLAGS="$CFLAGS -posix"
-  AC_TRY_COMPILE([#include <dirent.h>], [DIR *dir;],
-    AC_MSG_RESULT(-posix),
-    AC_MSG_RESULT()
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <dirent.h>]], [[DIR *dir;]])],
+    [
+	AC_MSG_RESULT(-posix)
+	],
+    [
+	AC_MSG_RESULT()
     CFLAGS=$glib_save_CFLAGS
-    AC_MSG_WARN([Could not determine POSIX flag. (-posix didn't work.)])))
+    AC_MSG_WARN([Could not determine POSIX flag. (-posix didn't work.)])
+	]
+  )])
 
 # Checks for library functions.
 AC_FUNC_VPRINTF
@@ -217,23 +223,19 @@ AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(long long)
 
-dnl long doubles were not used, and a portability problem
-dnl AC_C_LONG_DOUBLE
-AC_C_CONST
-
 dnl AC_C_INLINE is useless to us since it bails out too early, we need to
 dnl truely know which ones of `inline', `__inline' and `__inline__' are
 dnl actually supported.
 AC_MSG_CHECKING(for __inline)
 AC_CACHE_VAL(glib_cv_has__inline,[
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 	__inline int foo () { return 0; }
-	int main () { return foo (); }
-       	],
+	]], [[ return foo ();
+        ]])],[
 	glib_cv_has__inline=yes
-        ,
+        ],[
 	glib_cv_has__inline=no
-        ,)
+        ],[])
 ])
 AC_MSG_RESULT($glib_cv_has__inline)
 case x$glib_cv_has__inline in
@@ -241,14 +243,14 @@ xyes) AC_DEFINE(G_HAVE___INLINE)
 esac
 AC_MSG_CHECKING(for __inline__)
 AC_CACHE_VAL(glib_cv_has__inline__,[
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 	__inline__ int foo () { return 0; }
-	int main () { return foo (); }
-       	],
+	]], [[ return foo ();
+        ]])],[
 	glib_cv_has__inline__=yes
-        ,
+        ],[
 	glib_cv_has__inline__=no
-        ,)
+        ],[])
 ])
 AC_MSG_RESULT($glib_cv_has__inline__)
 case x$glib_cv_has__inline__ in
@@ -256,14 +258,14 @@ xyes) AC_DEFINE(G_HAVE___INLINE__)
 esac
 AC_MSG_CHECKING(for inline)
 AC_CACHE_VAL(glib_cv_hasinline,[
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 	inline int foo () { return 0; }
-	int main () { return foo (); }
-       	],
+	]], [[return foo ();
+        ]])],[
 	glib_cv_hasinline=yes
-        ,
+        ],[
 	glib_cv_hasinline=no
-        ,)
+        ],[])
 ])
 AC_MSG_RESULT($glib_cv_hasinline)
 case x$glib_cv_hasinline in
@@ -290,45 +292,53 @@ AC_CHECK_FUNCS(lstat strerror strsignal memmove vsnprintf strcasecmp strncasecmp
 
 # Check for sys_errlist
 AC_MSG_CHECKING(for sys_errlist)
-AC_TRY_LINK(, [
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <errno.h>
 extern char *sys_errlist[];
 extern int sys_nerr;
+]], [[
 sys_errlist[sys_nerr-1][0] = 0;
-], glib_ok=yes, glib_ok=no)
+]])], [glib_ok=yes], [glib_ok=no])
 AC_MSG_RESULT($glib_ok)
-if test $glib_ok = no; then
+AS_IF([test $glib_ok = no], [
     AC_DEFINE(NO_SYS_ERRLIST)
-fi
+])
 
 # Check for sys_siglist
 AC_MSG_CHECKING(for sys_siglist)
-AC_TRY_LINK(, [
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdlib.h>
 extern char *sys_siglist[];
+]], [[
 exit (sys_siglist[0]);
-], glib_ok=yes, glib_ok=no)
+]])], [glib_ok=yes], [glib_ok=no])
 AC_MSG_RESULT($glib_ok)
-if test $glib_ok = no; then
+AS_IF([test $glib_ok = no], [
     AC_DEFINE(NO_SYS_SIGLIST)
-fi
+])
 
 # Check for sys_siglist decl (see Tue Jan 19 00:44:24 1999 in changelog)
 AC_MSG_CHECKING(for sys_siglist declaration)
-AC_TRY_COMPILE([#include <signal.h>], [
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <signal.h>
+#include <string.h>
+extern char *sys_siglist[];
+]], [[
 strlen (sys_siglist[0]);
-], glib_ok=yes, glib_ok=no)
+]])], [glib_ok=yes], [glib_ok=no])
 AC_MSG_RESULT($glib_ok)
-if test $glib_ok = no; then
+AS_IF([test $glib_ok = no], [
     AC_DEFINE(NO_SYS_SIGLIST_DECL)
-fi
+])
 
 # Check if <sys/select.h> needs to be included for fd_set
 AC_MSG_CHECKING([for fd_set])
-AC_TRY_COMPILE([#include <sys/types.h>],
-        [fd_set readMask, writeMask;], gtk_ok=yes, gtk_ok=no)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],
+        [[fd_set readMask, writeMask;]])], [gtk_ok=yes], [gtk_ok=no])
 if test $gtk_ok = yes; then
     AC_MSG_RESULT([yes, found in sys/types.h])
 else
-    AC_HEADER_EGREP(fd_set, sys/select.h, gtk_ok=yes)
+    AC_EGREP_HEADER(fd_set, sys/select.h, gtk_ok=yes)
     if test $gtk_ok = yes; then
         AC_DEFINE(HAVE_SYS_SELECT_H)
         AC_MSG_RESULT([yes, found in sys/select.h])
@@ -346,19 +356,23 @@ fi
 # Check for wchar.h
 
 AC_MSG_CHECKING(for wchar.h)
-AC_TRY_CPP([#include <wchar.h>], glib_wchar_h=yes, glib_wchar_h=no)
-if test $glib_wchar_h = yes; then
+AC_PREPROC_IFELSE([AC_LANG_SOURCE([
+#include <wchar.h>
+])],[glib_wchar_h=yes],[glib_wchar_h=no])
+AS_IF([test $glib_wchar_h = yes], [
    AC_DEFINE(HAVE_WCHAR_H)
-fi
+])
 AC_MSG_RESULT($glib_wchar_h)
 
 # Check for wctype.h (for iswalnum)
 
 AC_MSG_CHECKING(for wctype.h)
-AC_TRY_CPP([#include <wctype.h>], glib_wctype_h=yes, glib_wctype_h=no)
-if test $glib_wctype_h = yes; then
+AC_PREPROC_IFELSE([AC_LANG_SOURCE([
+#include <wctype.h>
+])],[glib_wctype_h=yes],[glib_wctype_h=no])
+AS_IF([test $glib_wctype_h = yes], [
    AC_DEFINE(HAVE_WCTYPE_H)
-fi
+])
 AC_MSG_RESULT($glib_wctype_h)
 
 oLIBS="$LIBS"
@@ -386,25 +400,25 @@ iswalnum((wchar_t) 0);
 ]])], [glib_working_wctype=yes], [glib_working_wctype=no])
 LIBS="$oLIBS"
 
-if test $glib_working_wctype = no; then
+AS_IF([test "$glib_working_wctype" = "no"], [
    AC_DEFINE(HAVE_BROKEN_WCTYPE)
-fi
+])
 AC_MSG_RESULT($glib_working_wctype)
 
 dnl *** check for sane realloc() ***
 AC_CACHE_CHECK([whether realloc (NULL,) will work],glib_cv_sane_realloc,[
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_PROGRAM([
         #include <stdlib.h>
-        int main() {
+        ],[
           return realloc (0, sizeof (int)) == 0;
-        }],
+        ])],
         [glib_cv_sane_realloc=yes],
         [glib_cv_sane_realloc=no],
 	[])
 ])
-if test x$glib_cv_sane_realloc = xyes; then
+AS_IF([test "x$glib_cv_sane_realloc" = "xyes"], [
   AC_DEFINE(REALLOC_0_WORKS,1,[whether realloc (NULL,) works])
-fi
+])
 
 dnl **********************
 dnl *** va_copy checks ***
@@ -413,7 +427,7 @@ dnl we currently check for all three va_copy possibilities, so we get
 dnl all results in config.log for bug reports.
 AC_MSG_CHECKING(for an implementation of va_copy())
 AC_CACHE_VAL(glib_cv_va_copy,[
-	AC_TRY_RUN([
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 	#include <stdarg.h>
 	#include <stdlib.h>
 	void f (int i, ...) {
@@ -424,19 +438,19 @@ AC_CACHE_VAL(glib_cv_va_copy,[
 	  exit (1);
 	va_end (args1); va_end (args2);
 	}
-	int main() {
+    ]], [[
 	  f (0, 42);
 	  return 0;
-	}],
+	]])],[
 	glib_cv_va_copy=yes
-	,
+	],[
 	glib_cv_va_copy=no
-	,)
+	])
 ])
 AC_MSG_RESULT($glib_cv_va_copy)
 AC_MSG_CHECKING(for an implementation of __va_copy())
 AC_CACHE_VAL(glib_cv___va_copy,[
-	AC_TRY_RUN([
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 	#include <stdarg.h>
 	#include <stdlib.h>
 	void f (int i, ...) {
@@ -447,19 +461,19 @@ AC_CACHE_VAL(glib_cv___va_copy,[
 	  exit (1);
 	va_end (args1); va_end (args2);
 	}
-	int main() {
+    ]], [[
 	  f (0, 42);
 	  return 0;
-	}],
+	]])],[
 	glib_cv___va_copy=yes
-	,
+	],[
 	glib_cv___va_copy=no
-	,)
+	])
 ])
 AC_MSG_RESULT($glib_cv___va_copy)
 AC_MSG_CHECKING(whether va_lists can be copied by value)
 AC_CACHE_VAL(glib_cv_va_val_copy,[
-	AC_TRY_RUN([
+	AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 	#include <stdarg.h>
 	#include <stdlib.h>
 	void f (int i, ...) {
@@ -470,14 +484,14 @@ AC_CACHE_VAL(glib_cv_va_val_copy,[
 	  exit (1);
 	va_end (args1); va_end (args2);
 	}
-	int main() {
+    ]], [[
 	  f (0, 42);
 	  return 0;
-	}],
+	]])],[
 	glib_cv_va_val_copy=yes
-	,
+	],[
 	glib_cv_va_val_copy=no
-	,)
+	])
 ])
 if test "x$glib_cv_va_copy" = "xyes"; then
   AC_DEFINE(G_VA_COPY, va_copy)
@@ -522,12 +536,12 @@ if test -z "$G_MODULE_IMPL"; then
         AC_MSG_CHECKING(how to export all symbols)
         SAVED_LDFLAGS=$LDFLAGS
         LDFLAGS="$LDFLAGS -Wl,-E"
-        AC_TRY_LINK(,[ return 0; ],
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[ return 0; ]])],
                 [ G_MODULE_LDFLAGS="-Wl,-E" ],[
                 LDFLAGS="$SAVED_LDFLAGS -bexpall"
-                AC_TRY_LINK(,[ return 0; ],
-                        G_MODULE_LDFLAGS="-bexpall",
-                        G_MODULE_LDFLAGS="none"
+                AC_LINK_IFELSE([AC_LANG_PROGRAM([[ return 0; ]])],
+                        [G_MODULE_LDFLAGS="-bexpall"],
+                        [G_MODULE_LDFLAGS="none"]
                 )
         ])
         LDFLAGS=$SAVED_LDFLAGS
@@ -554,7 +568,7 @@ if test "$G_MODULE_IMPL" = "G_MODULE_IMPL_DL"; then
 dnl *** check for OSF1/5.0 RTLD_GLOBAL brokenness
         AC_CACHE_CHECK([for RTLD_GLOBAL brokenness],
                 glib_cv_rtldglobal_broken,[
-                AC_TRY_RUN([
+                AC_RUN_IFELSE([AC_LANG_PROGRAM([[
                 #include <dlfcn.h>
                 #ifndef RTLD_GLOBAL
                 #define RTLD_GLOBAL 0
@@ -563,14 +577,14 @@ dnl *** check for OSF1/5.0 RTLD_GLOBAL brokenness
                 #define RTLD_LAZY 0
                 #endif
                 int pthread_create;
-                int main () {
+                ]], [[
                 void *handle, *global, *local;
                 global = &pthread_create;
                 handle = dlopen ("libpthread.so", RTLD_GLOBAL | RTLD_LAZY);
                 if (!handle) return 0;
                 local = dlsym (handle, "pthread_create");
                 return global == local;
-                }],
+                ]])],
                         [glib_cv_rtldglobal_broken=no],
                         [glib_cv_rtldglobal_broken=yes],
                         [])
@@ -584,19 +598,19 @@ dnl *** check for OSF1/5.0 RTLD_GLOBAL brokenness
 dnl *** check whether we need preceeding underscores
 	AC_MSG_CHECKING(for preceeding underscore in symbols)
 	AC_CACHE_VAL(glib_cv_uscore,[
-		AC_TRY_RUN([
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[
 		#include <dlfcn.h>
                 int glib_underscore_test (void) { return 42; }
-		int main() {
+        ]], [[
 		  void *f1 = (void*)0, *f2 = (void*)0, *handle;
 		  handle = dlopen ((void*)0, 0);
 		  if (handle) {
 		    f1 = dlsym (handle, "glib_underscore_test");
 		    f2 = dlsym (handle, "_glib_underscore_test");
 		  } return (!f2 || f1);
-		}],
-			glib_cv_uscore=yes,
-			glib_cv_uscore=no,
+		]])],
+			[glib_cv_uscore=yes],
+			[glib_cv_uscore=no],[]
 		)
 		rm -f plugin.c plugin.o plugin.lo
 	])
@@ -789,11 +803,11 @@ G_THREAD_CFLAGS="$G_THREAD_CFLAGS -D_REENTRANT" # good default guess
 		if test x"$GCC" = xyes; then
 			# GCC 3.0 and above needs -pthread
 			# GCC 2.x and below needs -mthreads
-			AC_TRY_COMPILE(,[#if __GNUC__ <= 2
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],[[#if __GNUC__ <= 2
 					bail out here
-					#endif],
-				G_THREAD_CFLAGS="$G_THREAD_CFLAGS -pthread", 
-				G_THREAD_CFLAGS="$G_THREAD_CFLAGS -mthreads")
+					#endif]])],
+				[G_THREAD_CFLAGS="$G_THREAD_CFLAGS -pthread"],
+				[G_THREAD_CFLAGS="$G_THREAD_CFLAGS -mthreads"])
 		fi
 		;;
 	*-freebsd2.2*)
@@ -835,15 +849,15 @@ if test x"$have_threads" != xnone; then
 	if test "$ac_cv_header_pwd_h" = "yes"; then
 		AC_MSG_CHECKING([for getpwuid_r])
 	 	AC_CACHE_VAL(ac_cv_func_getpwuid_r,
-			[AC_TRY_RUN([#include <errno.h>
-				int main () { char buffer[10000], *pointer; 
+			[AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <errno.h>]], [[
+				char buffer[10000], *pointer;
 				char getpwuid_r (long, void*, void*,
 					int, void*);
 				int error;
 				errno = 0;
 				error = getpwuid_r (0, &buffer, &buffer, 
 					sizeof (buffer), &pointer);
-				return errno == ENOSYS || error == ENOSYS;}],
+				return errno == ENOSYS || error == ENOSYS;]])],
 				[ac_cv_func_getpwuid_r=yes],
 				[ac_cv_func_getpwuid_r=no])])
 		if test "$ac_cv_func_getpwuid_r" = yes; then
@@ -856,10 +870,10 @@ if test x"$have_threads" != xnone; then
 			AC_MSG_CHECKING(whether getpwuid_r is posix like)
 			# The signature for the POSIX version is:
 			# int getpwuid_r(uid_t, struct passwd *, char *, size_t, struct passwd **)
-			AC_TRY_COMPILE([#include <pwd.h>
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pwd.h>
                                         #include <sys/types.h>
-                                        #include <stdlib.h>],
-				[getpwuid_r((uid_t)0, NULL, NULL, (size_t)0, NULL);],
+                                        #include <stdlib.h>]],
+				[[getpwuid_r((uid_t)0, NULL, NULL, (size_t)0, NULL);]])],
 				[AC_DEFINE(HAVE_GETPWUID_R_POSIX)
 				AC_MSG_RESULT(yes)],
 				[AC_MSG_RESULT(no)])
@@ -869,25 +883,24 @@ if test x"$have_threads" != xnone; then
 		LIBS="$LIBS $G_THREAD_LIBS"
 		AC_MSG_CHECKING(whether pthread_getspecific is posix like)
 		# PCThreads has pthread_getspecific(pthread_key_t, void **);
-		AC_TRY_COMPILE([#include <pthread.h>],
-			[pthread_getspecific(0,NULL);],
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],
+			[[pthread_getspecific(0,NULL);]])],
 			[AC_MSG_RESULT(no)],
 			[AC_MSG_RESULT(yes)
 			AC_DEFINE(HAVE_PTHREAD_GETSPECIFIC_POSIX)])
 		AC_MSG_CHECKING(whether pthread_mutex_trylock is posix like)
 		# DCE Threads return 1 as success, posix 0. what a mess.
-		AC_TRY_RUN([#include <pthread.h>
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],[[
 			pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-			int main () { 
-			return !pthread_mutex_trylock (&mutex); }],
+			return !pthread_mutex_trylock (&mutex);]])],
 			[AC_MSG_RESULT(no)],
 			[AC_MSG_RESULT(yes)
 			AC_DEFINE(HAVE_PTHREAD_MUTEX_TRYLOCK_POSIX)])
 		AC_MSG_CHECKING(whether pthread_cond_timedwait is posix like)
 		# DCE Threads return -1 as failure, posix ETIMEDOUT.
-		AC_TRY_RUN([#include <pthread.h>
+		AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>
 			#include <sys/time.h>
-			int main () { 
+            ]], [[
 			pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 			pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 			struct timeval tval;
@@ -897,7 +910,7 @@ if test x"$have_threads" != xnone; then
 			tspec.tv_nsec = 0;
 			pthread_mutex_lock (&mutex);
 			return pthread_cond_timedwait (&cond,&mutex,&tspec) 
-				!= -1;}],
+				!= -1;]])],
 			[AC_MSG_RESULT(no)],
 			[AC_MSG_RESULT(yes)
 			AC_DEFINE(HAVE_PTHREAD_COND_TIMEDWAIT_POSIX)])
@@ -906,14 +919,14 @@ if test x"$have_threads" != xnone; then
 	CFLAGS="$glib_save_CFLAGS"
 fi
 
-if test "x$enable_threads" = "xyes"; then
-	if test "$ac_cv_func_getpwuid_r" != "yes"; then
+AS_IF([test "x$enable_threads" = "xyes"], [
+	AS_IF([test "$ac_cv_func_getpwuid_r" != "yes"], [
 		AC_MSG_WARN($FUNC_NO_GETPWUID_R)
-	fi
-	if test "$ac_cv_func_localtime_r" != "yes"; then
+	])
+	AS_IF([test "$ac_cv_func_localtime_r" != "yes"], [
 		AC_MSG_WARN($FUNC_NO_LOCALTIME_R)
-	fi
-fi
+	])
+])
 
 AC_DEFINE_UNQUOTED(G_THREAD_SOURCE,"gthread-$have_threads.c")
 AC_SUBST(G_THREAD_CFLAGS)
